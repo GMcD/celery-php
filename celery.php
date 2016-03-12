@@ -195,9 +195,10 @@ abstract class CeleryAbstract
 	 * @param bool $async_result Set to false if you don't need the AsyncResult object returned
 	 * @param string $routing_key Set to routing key name if you're using something other than "celery"
 	 * @param array $task_args Additional settings for Celery - normally not needed
+	 * @param array $params_args Additional settings for RabbitMQ such as correlation_id which are useful in RPC
 	 * @return AsyncResult
 	 */
-	function PostTask($task, $args, $async_result=true,$routing_key="celery", $task_args=array())
+	function PostTask($task, $args, $async_result=true,$routing_key="celery", $task_args=array(), $params_args=array())
 	{
 		if(!is_array($args))
 		{
@@ -237,11 +238,20 @@ abstract class CeleryAbstract
 			),
 			$task_args
 		);
-		
 		$task = json_encode($task_array);
-		$params = array('content_type' => 'application/json',
-			'content_encoding' => 'UTF-8',
-			'immediate' => false,
+
+		/*
+		 *	$params_args may contain additional arguments such as correlation_id which are useful in RPC
+		 *	The usecase of this field is as follows:
+		 *	$params_args = array( 'correlation_id' => "00000000-0000-0000-0000-000000000000" );
+		 */
+		$params = array_merge(
+			array(
+				'content_type' => 'application/json',
+				'content_encoding' => 'UTF-8',
+				'immediate' => false,
+			),
+			$params_args
 		 );
 
 		if($this->broker_connection_details['persistent_messages'])
