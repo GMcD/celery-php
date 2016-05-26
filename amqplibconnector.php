@@ -56,7 +56,7 @@ class AMQPLibConnector extends AbstractAMQPConnector
 	 * How long (in seconds) to wait for a message from queue 
 	 * Sadly, this can't be set to zero to achieve complete asynchronity
 	 */
-    public $wait_timeout = 0.1;
+	public $wait_timeout = 0.1;
 
 	/**
 	 * PhpAmqpLib\Message\AMQPMessage object received from the queue
@@ -96,18 +96,21 @@ class AMQPLibConnector extends AbstractAMQPConnector
 			false					/* auto_delete */
 		);
 
-		$ch->exchange_declare(
-			$details['exchange'],	/* name */
-			'direct',				/* type */
-			false,					/* passive */
-			true,					/* durable */
-			false					/* auto_delete */
-		);
+		/* Do not bind on default exchange */
+		if ($details['exchange'] !== ''){
+			$ch->exchange_declare(
+				$details['exchange'],	/* name */
+				'direct',				/* type */
+				false,					/* passive */
+				true,					/* durable */
+				false					/* auto_delete */
+			);
 
-		$ch->queue_bind(
-			$details['binding'], 	/* queue name - "celery" */
-			$details['exchange'] 	/* exchange name - "celery" */
-		);
+			$ch->queue_bind(
+				$details['binding'], 	/* queue name - "celery" */
+				$details['exchange'] 	/* exchange name - "celery" */
+			);
+		}
 
 		$msg = new AMQPMessage(
 			$task,
